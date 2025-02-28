@@ -82,7 +82,8 @@ module tb ();
     uio_in = 8'b10101010;
     #10;
     $display("Test 4 - Expected: %b, Got: %b", (ui_in | uio_in), uo_out);
-
+   
+      #10; // Small delay before finish
     $finish;
   end
 
