@@ -53,5 +53,8 @@ MODULE = test
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
 # Run simulation and ensure results.xml is generated
+.PHONY: run
 run: clean
-	pytest --junitxml=$(TEST_DIR)/results.xml || touch $(TEST_DIR)/results.xml
+	@echo "Running simulation..."
+	@cd $(TEST_DIR) && pytest --junitxml=results.xml || touch results.xml
+	@echo "Simulation complete. Results stored in $(TEST_DIR)/results.xml"
