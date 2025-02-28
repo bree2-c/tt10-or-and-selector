@@ -57,6 +57,8 @@ module tb ();
     clk = 0;
     rst_n = 0;
     ena = 1;
+    ui_in  = 8'b00000000; // Initialize inputs
+    uio_in = 8'b00000000;
     #10 rst_n = 1; // Release reset
 
     // Test Case 1: A[7] = 0 → Perform AND operation
@@ -64,26 +66,31 @@ module tb ();
     uio_in = 8'b00011110;  // 30
     #10;
     $display("Test 1 - Expected: %b, Got: %b", (ui_in & uio_in), uo_out);
+    assert (uo_out == (ui_in & uio_in)) else $error("Test 1 Failed!");
 
     // Test Case 2: A[7] = 1 → Perform OR operation
     ui_in  = 8'b10010100;  // 148
     uio_in = 8'b00011110;  // 30
     #10;
     $display("Test 2 - Expected: %b, Got: %b", (ui_in | uio_in), uo_out);
+    assert (uo_out == (ui_in | uio_in)) else $error("Test 2 Failed!");
 
     // Test Case 3: Edge case where both inputs are 0
     ui_in  = 8'b00000000;  
     uio_in = 8'b00000000;
     #10;
     $display("Test 3 - Expected: 00000000, Got: %b", uo_out);
+    assert (uo_out == 8'b00000000) else $error("Test 3 Failed!");
 
     // Test Case 4: A[7] = 1 with all 1s
     ui_in  = 8'b11111111;  
     uio_in = 8'b10101010;
     #10;
     $display("Test 4 - Expected: %b, Got: %b", (ui_in | uio_in), uo_out);
-   
-      #10; // Small delay before finish
+    assert (uo_out == (ui_in | uio_in)) else $error("Test 4 Failed!");
+    
+    // Final delay before finish
+    #10; 
     $finish;
   end
 
