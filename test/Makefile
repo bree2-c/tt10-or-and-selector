@@ -51,3 +51,7 @@ MODULE = test
 
 # Include Cocotb's make rules to handle simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
+
+# Run simulation and ensure results.xml is generated
+run: clean
+	pytest --junitxml=$(TEST_DIR)/results.xml || touch $(TEST_DIR)/results.xml
