@@ -20,12 +20,15 @@ module tt_um_or_and_selector (
     if (!rst_n)
         uo_out <= 8'b0;  // Reset output to 0 when rst_n is low
     else if (ena) begin
-        if (ui_in[7])  // If MSB is 1 → OR operation
+        if (ui_in[7] == 1'b1)  // If MSB is 1 → OR operation
             uo_out <= ui_in | uio_in;
-        else           // If MSB is 0 → AND operation
+        else                   // If MSB is 0 → AND operation
             uo_out <= ui_in & uio_in;
+    end else begin
+        uo_out <= uo_out; // Hold value when ena = 0
     end
-  end
+end
+
 
   assign uio_out = 8'b00000000;  // Unused outputs set to 0
   assign uio_oe  = 8'b00000000;  // Unused outputs set to 0
