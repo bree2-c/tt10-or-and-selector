@@ -18,20 +18,17 @@ module tt_um_or_and_selector (
 
   always @(posedge clk or negedge rst_n) begin
     if (!rst_n)
-        uo_out <= 8'b0;  // Reset output to 0 on reset
+        uo_out <= 8'b0;  // Reset output to 0 when rst_n is low
     else if (ena) begin
-        if (ui_in[7])  // If MSB of ui_in is 1 → OR operation
+        if (ui_in[7])  // If MSB is 1 → OR operation
             uo_out <= ui_in | uio_in;
-        else           // If MSB of ui_in is 0 → AND operation
+        else           // If MSB is 0 → AND operation
             uo_out <= ui_in & uio_in;
     end
-    // If ena=0, hold the last value (no update)
   end
 
   assign uio_out = 8'b00000000;  // Unused outputs set to 0
   assign uio_oe  = 8'b00000000;  // Unused outputs set to 0
 
-  // Prevent warnings for unused signals
-  wire _unused = &{1'b0};
-
 endmodule
+
