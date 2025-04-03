@@ -5,27 +5,28 @@
 
 `default_nettype none
 
-module tt_um_priority_encoder (
-    input  wire [7:0] ui_in,    // Dedicated inputs
-    output reg  [7:0] uo_out,   // Dedicated outputs
-    input  wire [7:0] uio_in,   // IOs: Input path
-    output wire [7:0] uio_out,  // IOs: Output path
-    output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
-    input  wire       ena,      // always 1 when the design is powered, so you can ignore it
-    input  wire       clk,      // clock
-    input  wire       rst_n     // reset_n - low to reset
+module tt_um_example (
+    input  wire [7:0] ui_in,    // A[7:0]  → upper bits (In[15:8])
+    output reg  [7:0] uo_out,   // C[7:0]  → output: priority index
+    input  wire [7:0] uio_in,   // B[7:0]  → lower bits (In[7:0])
+    output wire [7:0] uio_out,  // unused
+    output wire [7:0] uio_oe,   // unused
+    input  wire       ena,
+    input  wire       clk,
+    input  wire       rst_n
 );
 
-    wire [15:0] Ind;
-    assign Ind = {ui_in, uio_in};  // Concatenate ui_in as MSB and uio_in as LSB
+    wire [15:0] In;
+    assign In = {ui_in, uio_in};
 
-    integer z;
+    integer i;
     always @(*) begin
-        uo_out = 8'b1111_0000;
-        for (z = 15; z >= 0; z = z - 1) begin
-            if (Ind[z]) begin
-                uo_out = z;
-                disable for;  // Exit loop when first 1 is found
+        uo_out = 8'b11110000;  // Default when all bits are 0
+
+        for (i = 15; i >= 0; i = i - 1) begin
+            if (In[i]) begin
+                uo_out = i;
+                disable for;  // Exit loop after first 1 is found
             end
         end
     end
