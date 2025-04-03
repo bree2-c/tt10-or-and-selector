@@ -5,9 +5,9 @@
 
 `default_nettype none
 
-module tt_um_adder (
+module tt_um_priority_encoder (
     input  wire [7:0] ui_in,    // Dedicated inputs
-    output wire [7:0] uo_out,   // Dedicated outputs
+    output reg  [7:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path
     output wire [7:0] uio_out,  // IOs: Output path
     output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
@@ -16,21 +16,23 @@ module tt_um_adder (
     input  wire       rst_n     // reset_n - low to reset
 );
 
-    // Split input into two 4-bit values
-    wire [3:0] a = ui_in[7:4];
-    wire [3:0] b = ui_in[3:0];
+    wire [15:0] Ind;
+    assign Ind = {ui_in, uio_in};  // Concatenate ui_in as MSB and uio_in as LSB
 
-    // Compute the sum
-    wire [4:0] sum = a + b;
+    integer z;
+    always @(*) begin
+        uo_out = 8'b1111_0000;
+        for (z = 15; z >= 0; z = z - 1) begin
+            if (Ind[z]) begin
+                uo_out = z;
+                disable for;  // Exit loop when first 1 is found
+            end
+        end
+    end
 
-    // Assign the lower 5 bits of the result to uo_out
-    assign uo_out = {3'b000, sum};  // Padding with 0s to fit 8 bits
-
-    // Unused bidirectional outputs
     assign uio_out = 8'b0;
     assign uio_oe  = 8'b0;
 
-    // List unused inputs to prevent synthesis warnings
-    wire _unused = &{uio_in, ena, clk, rst_n};
+    wire _unused = &{ena, clk, rst_n, 1'b0};
 
 endmodule
