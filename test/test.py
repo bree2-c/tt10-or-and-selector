@@ -7,39 +7,36 @@ from cocotb.triggers import ClockCycles
 
 
 @cocotb.test()
-async def test_project(dut):
-    dut._log.info("Start priority encoder test")
+async def test_priority_encoder(dut):
+    dut._log.info("🔁 Starting Priority Encoder Test")
 
-    # Create and start clock
+    # Start the clock
     clock = Clock(dut.clk, 10, units="us")
     cocotb.start_soon(clock.start())
 
-    # Apply reset
+    # Reset
     dut.ena.value = 1
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 2)
     dut.rst_n.value = 1
 
-    # (ui_in, uio_in, expected_output)
     test_vectors = [
-        (0x00, 0x00, 240),  # No bits set
-        (0x00, 0x01, 0),    # Only LSB set
-        (0x00, 0x80, 7),    # MSB of uio_in set
-        (0x01, 0x00, 8),    # LSB of ui_in set
-        (0x80, 0x00, 15),   # MSB of ui_in set
-        (0xFF, 0xFF, 15),   # All bits set
-        (0x00, 0x10, 4),    # Middle bit in uio_in
-        (0x10, 0x00, 12),   # Middle bit in ui_in
+        # Format: (A, B, Expected_Output)
+        (0b00101010, 0b11110001, 13),    # First 1 at bit 13
+        (0b00000000, 0b00000001, 0),     # First 1 at bit 0
+        (0b00000000, 0b00000000, 240),   # All 0s → special case
+        (0b10000000, 0b00000000, 15),    # First 1 at bit 15
+        (0b00000001, 0b00000000, 8),     # First 1 at bit 8
+        (0b00000000, 0b10000000, 7),     # First 1 at bit 7
+        (0b00010000, 0b00000000, 12),    # First 1 at bit 12
     ]
 
-    for ui_val, uio_val, expected in test_vectors:
-        dut.ui_in.value = ui_val
-        dut.uio_in.value = uio_val
-
+    for A, B, expected in test_vectors:
+        dut.ui_in.value = A
+        dut.uio_in.value = B
         await ClockCycles(dut.clk, 1)
+        actual = dut.uo_out.value.integer
 
-        result = dut.uo_out.value.integer
+        assert actual == expected, f"❌ Failed: In={bin((A<<8)|B)} → Got {actual}, Expected {expected}"
 
-        assert result == expected, f"FAILED: input={{ui_in={ui_val}, uio_in={uio_val}}} → got {result}, expected {expected}"
-
-    dut._log.info("✅ All priority encoder test cases passed.")
+    dut._log.info("✅ All test cases passed!")
