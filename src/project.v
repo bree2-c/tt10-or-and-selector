@@ -5,7 +5,7 @@
 
 `default_nettype none
 
-module tt_um_example (
+module tt_um_priority_encoder (
     input  wire [7:0] ui_in,    // A[7:0]  → upper bits (In[15:8])
     output reg  [7:0] uo_out,   // C[7:0]  → output: priority index
     input  wire [7:0] uio_in,   // B[7:0]  → lower bits (In[7:0])
