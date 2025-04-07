@@ -8,35 +8,54 @@ from cocotb.triggers import ClockCycles
 
 @cocotb.test()
 async def test_priority_encoder(dut):
-    dut._log.info("🔁 Starting Priority Encoder Test")
+    dut._log.info("Start Priority Encoder Test")
 
-    # Start the clock
+    # Set up the clock (10 us period -> 100 KHz frequency)
     clock = Clock(dut.clk, 10, units="us")
     cocotb.start_soon(clock.start())
 
-    # Reset
+    # Reset DUT
+    dut._log.info("Reset DUT")
     dut.ena.value = 1
+    dut.ui_in.value = 0
+    dut.uio_in.value = 0
     dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 2)
+    await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
 
-    test_vectors = [
-        # Format: (A, B, Expected_Output)
-        (0b00101010, 0b11110001, 13),    # First 1 at bit 13
-        (0b00000000, 0b00000001, 0),     # First 1 at bit 0
-        (0b00000000, 0b00000000, 240),   # All 0s → special case
-        (0b10000000, 0b00000000, 15),    # First 1 at bit 15
-        (0b00000001, 0b00000000, 8),     # First 1 at bit 8
-        (0b00000000, 0b10000000, 7),     # First 1 at bit 7
-        (0b00010000, 0b00000000, 12),    # First 1 at bit 12
-    ]
+    dut._log.info("Begin Testing Priority Encoder")
 
-    for A, B, expected in test_vectors:
-        dut.ui_in.value = A
-        dut.uio_in.value = B
+    # Test all 16-bit single-bit priority inputs
+    for i in range(16):
+        input_value = 1 << i  # Shift 1 to the correct position to simulate priority encoding
+
+        # Split into ui_in (upper 8 bits) and uio_in (lower 8 bits)
+        ui_in_val = (input_value >> 8) & 0xFF  # Upper 8 bits
+        uio_in_val = input_value & 0xFF  # Lower 8 bits
+
+        # Assign input values
+        dut.ui_in.value = ui_in_val
+        dut.uio_in.value = uio_in_val
+
+        # Wait for one clock cycle
         await ClockCycles(dut.clk, 1)
-        actual = dut.uo_out.value.integer
 
-        assert actual == expected, f"❌ Failed: In={bin((A<<8)|B)} → Got {actual}, Expected {expected}"
+        # Read the output
+        output_val = int(dut.uo_out.value)
 
-    dut._log.info("✅ All test cases passed!")
+        # Expected priority encoder output
+        expected_output = i if i < 16 else 255  # If no priority bit is set, return 255
+
+        # Log result
+        dut._log.info(f"Test case ui_in={ui_in_val:08b}, uio_in={uio_in_val:08b} -> uo_out={output_val:08b}")
+
+        # Assert correctness
+        assert output_val == expected_output, (
+            f"Test failed for ui_in={ui_in_val:08b}, uio_in={uio_in_val:08b}. Expected {expected_output}, "
+            f"but got {output_val:08b}"
+        )
+
+        # Log success
+        dut._log.info(f"Test passed for priority bit at position {i}")
+
+    dut._log.info("Priority Encoder Test Completed Successfully")
